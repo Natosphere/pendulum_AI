@@ -1,0 +1,6 @@
+name: pendulum_AI
+dependencies:
+  - python=3.10.11
+  - pip
+  - pygame
+  - pymunk
