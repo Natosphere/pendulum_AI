@@ -35,11 +35,11 @@ def random_pos_circumference(radius, center_x, center_y):
 #     return int(point[0]), int(size[0]-point[1])
 
 class Ball():
-    def __init__(self, space, x, y):
+    def __init__(self, space, x, y, radius=10):
         self.body = pymunk.Body()
         self.body.position = x, y
         self.body.mass = 1
-        self.shape = pymunk.Circle(self.body, 10)
+        self.shape = pymunk.Circle(self.body, radius)
         self.shape.density = 1
         self.shape.elasticity = 1
         self.shape.friction = 0.5
@@ -82,7 +82,6 @@ class String():
             self.body2 = pymunk.Body(body_type=pymunk.Body.STATIC)
             self.body2.position = attachment
         joint = pymunk.PinJoint(self.body1, self.body2)
-        joint.elastic
         space.add(joint)
     # def draw(self):
     #     pos1 = convert_coordinates(self.body1.position)
@@ -132,14 +131,6 @@ class App:
                     case pygame.K_RIGHT:
                         cart.body.position += Vec2d(1, 0) * 20
 
-
-    # def update(self):
-        
-        # string_1.draw()
-        # string_2.draw()
-        # ball_1.draw()
-        # ball_2.draw()
-        # cart.draw()
     
     def draw(self):
         self.screen.fill(self.screen_color)
@@ -149,67 +140,27 @@ class App:
 
 
 
-# def game():
+def create_pendulum(space, seg_len, seg_count):
+    ball_list = []
+    string_list = []
+    cart = Box(space, 300, 300, 50, 20)
+    ball_list.append(Ball(space, *random_pos_circumference(seg_len, *cart.body.position), 5))
+    string_list.append(String(space, ball_list[0].body, cart.body))
 
-#     cart = Box(300, 300, 50, 20)
-#     ball_1 = Ball(*random_pos_circumference(150, cart.body.position.x, cart.body.position.y))
-#     ball_2 = Ball(*random_pos_circumference(150, ball_1.body.position.x, ball_1.body.position.y))
-#     string_1 = String(ball_1.body, cart.body)
-#     string_2 = String(ball_1.body, ball_2.body)
-
-#     while True:
-#         for event in pygame.event.get():
-#             do_event(event)
-            
-
-            
-#         display.fill((28,28,28))
-#         string_1.draw()
-#         string_2.draw()
-#         ball_1.draw()
-#         ball_2.draw()
-#         cart.draw()
-
-
-
-
-
-
-
-#         pygame.display.update()
-#         clock.tick(FPS)
-#         space.step(1/FPS)
-
-
-# def do_event(self, event):
-#     if event.type == pygame.QUIT:
-#         self.running = False
-#     elif event.type == pygame.KEYDOWN:
-#         if event.key == pygame.K_ESCAPE:
-#             self.running = False
-        
-#         # key inputs
-#         match event.key:
-#             case pygame.K_LEFT:
-#                 self.cart.body.position += (-1, 0) * 20
-#             case pygame.K_RIGHT:
-#                 self.cart.body.position += (1, 0) * 20
-
-
+    for i in range(seg_count):
+        ball_list.append(Ball(space, *random_pos_circumference(seg_len, ball_list[i].body.position.x, ball_list[i].body.position.y), 5))
+        string_list.append(String(space, ball_list[i].body, ball_list[i+1].body))
+    
+    return cart, ball_list, string_list
 
 
 if __name__ == "__main__":
 
-    anchor = (300, 300)
     space = pymunk.Space()
     
-    b0 = space.static_body
-    b0.position = (300, 300)
-    cart = Box(space, 300, 300, 50, 20)
-    ball_1 = Ball(space, *random_pos_circumference(125, *cart.body.position))
-    ball_2 = Ball(space, *random_pos_circumference(125, ball_1.body.position.x, ball_1.body.position.y))
-    string_1 = String(space, ball_1.body, cart.body)
-    string_2 = String(space, ball_1.body, ball_2.body)
+    cart, ball_list, string_list = create_pendulum(space, 50, 5)
+
+
 
     App(space).run()
 
