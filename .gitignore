@@ -399,4 +399,4 @@ FodyWeavers.xsd
 
 # conda environment
 envs/**
-
+envs/
