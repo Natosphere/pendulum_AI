@@ -398,5 +398,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 # conda environment
-envs/ 
+envs/**
 
