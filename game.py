@@ -98,19 +98,29 @@ class App:
         self.running = True
         self.clock = pygame.time.Clock()
         self.fps = 100
-        self.width = 600
+        # self.time = time.time()
+        # self.
+
+        self.width = 800
         self.height = 600
         self.screen_color = (28,28,28)
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.draw_options = DrawOptions(self.screen)
         space.gravity = 0, 900
         space.damping = 0.95
+        space.iterations = 20
         self.ball_color = (55, 100, 173)
+
+        self.max_speed = 3
+        self.acceleration = 0.2
+        self.deceleration = 0.3
+        self.cart_speed = 0
         
     def run(self):
         while self.running:
             self.clock.tick(self.fps)
             self.events()
+            self.movement()
             self.draw()
             self.space.step(1/self.fps)
             # self.update()
@@ -124,14 +134,61 @@ class App:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
                 
-                # key inputs
-                match event.key:
-                    case pygame.K_LEFT:
-                        cart.body.position += Vec2d(-1, 0) * 20
-                    case pygame.K_RIGHT:
-                        cart.body.position += Vec2d(1, 0) * 20
+                # # key inputs
+                # match event.key:
+                #     case pygame.K_LEFT:
+                #         if self.cart_speed > -self.max_speed:
+                #             self.cart_speed -= self.acceleration
+                #     case pygame.K_RIGHT:
+                #         if self.cart_speed < self.max_speed:
+                #             self.cart_speed += self.acceleration
+                #     case not pygame.K_LEFT and not pygame.K_RIGHT:
+                #         if self.cart_speed > 0:
+                #             self.cart_speed -= self.deceleration
+                #         elif self.cart_speed < 0:
+                #             self.cart_speed += self.deceleration
 
-    
+
+            #     elif event.key == pygame.K_LEFT:
+            #         if self.cart_speed > -self.max_speed:
+            #             self.cart_speed -= self.acceleration
+            #     elif event.key == pygame.K_RIGHT:
+            #         if self.cart_speed < self.max_speed:
+            #             self.cart_speed += self.acceleration
+            # else:
+            #     if self.cart_speed > 0:
+            #         self.cart_speed -= self.deceleration
+            #         if self.cart_speed < 0:
+            #             self.cart_speed = 0
+            #     elif self.cart_speed < 0:
+            #         self.cart_speed += self.deceleration
+            #         if self.cart_speed > 0:
+            #             self.cart_speed = 0
+
+     
+        print(self.cart_speed)
+        
+        # apply movement to cart
+        cart.body.position += Vec2d(1, 0) * self.cart_speed
+
+    def movement(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            if self.cart_speed > -self.max_speed:
+                self.cart_speed -= self.acceleration
+        elif keys[pygame.K_RIGHT]:
+            if self.cart_speed < self.max_speed:
+                self.cart_speed += self.acceleration
+        else:
+            if self.cart_speed > 0:
+                self.cart_speed -= self.deceleration
+                if self.cart_speed < 0:
+                    self.cart_speed = 0
+            elif self.cart_speed < 0:
+                self.cart_speed += self.deceleration
+                if self.cart_speed > 0:
+                    self.cart_speed = 0
+
     def draw(self):
         self.screen.fill(self.screen_color)
         self.space.debug_draw(self.draw_options)
@@ -143,11 +200,11 @@ class App:
 def create_pendulum(space, seg_len, seg_count):
     ball_list = []
     string_list = []
-    cart = Box(space, 300, 300, 50, 20)
+    cart = Box(space, 400, 300, 50, 20)
     ball_list.append(Ball(space, *random_pos_circumference(seg_len, *cart.body.position), 5))
     string_list.append(String(space, ball_list[0].body, cart.body))
 
-    for i in range(seg_count):
+    for i in range(seg_count - 1):
         ball_list.append(Ball(space, *random_pos_circumference(seg_len, ball_list[i].body.position.x, ball_list[i].body.position.y), 5))
         string_list.append(String(space, ball_list[i].body, ball_list[i+1].body))
     
@@ -158,7 +215,7 @@ if __name__ == "__main__":
 
     space = pymunk.Space()
     
-    cart, ball_list, string_list = create_pendulum(space, 50, 5)
+    cart, ball_list, string_list = create_pendulum(space, 125, 2)
 
 
 
