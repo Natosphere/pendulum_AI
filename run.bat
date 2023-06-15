@@ -4,7 +4,7 @@ call %root%Scripts\activate.bat %root%
 
 call conda activate .\envs
 
-call python game.py
+REM call python game.py
 
 
 cmd \k

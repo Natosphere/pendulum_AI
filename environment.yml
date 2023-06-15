@@ -1,6 +1,13 @@
-name: pendulum_AI
+name: envs
 dependencies:
   - python=3.10.11
   - pip
-  - pygame
-  - pymunk
+  - pip:
+    - gymnasium
+    - pybullet
+    - matplotlib
+    - opencv-python
+    - pygame
+    - numpy
+    - tqdp
+    - pandas
