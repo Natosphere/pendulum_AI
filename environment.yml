@@ -11,3 +11,4 @@ dependencies:
     - numpy
     - tqdp
     - pandas
+    - h5py

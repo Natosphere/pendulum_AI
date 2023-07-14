@@ -5,22 +5,23 @@ import pandas as pd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import cv2
+import h5py
 
 class QLearningAgent:
 
     def __init__(
         self,
         env,
-        learning_rate=0.5,             # 0 means the agent doesn't update q-table at all. 1 means the agent rewrites entire q-table. 
-        learning_decay_rate=0.0001,
+        learning_rate=0.8,             # 0 means the agent doesn't update q-table at all. 1 means the agent rewrites entire q-table. 
+        learning_decay_rate=0.00001,
         min_learning_rate=0.01,
         discount_factor=0.99,           # gamma. 0 means agent only cares about immediate rewards. 1 means agent values future rewards equally to immediate rewards.
         exploration_rate=1.0,           # initial epsilon value
         exploration_decay_rate=0.0001,    # epsilon decay rate
         min_exploration_rate=0.02,
-
         file_save_path="./",
-        num_bins=[20,20]       # Adjust the number of bins based on your environment. length depends on observation space variables, the number size correlates to how granular you want the analog measurements to be digitized into.
+        num_bins=[20,20],       # Adjust the number of bins based on your environment. length depends on observation space variables, the number size correlates to how granular you want the analog measurements to be digitized into.
+        input_model_path=None
     ):
 
         self.env = env
@@ -35,16 +36,14 @@ class QLearningAgent:
         self.file_save_path = file_save_path
         self.num_bins = num_bins
 
-        # print(self.env.observation_space.high)
-        # print(self.env.observation_space.low)
         # Create the state discretization boundaries for each dimension of the observation space
         self.discretization_boundaries = [np.linspace(self.env.observation_space.low[i], self.env.observation_space.high[i], num_bins[i] + 1).astype(np.float32) for i in range(len(num_bins))]
-        # print(self.discretization_boundaries)
 
-        # initialize q-table with zeros 
-        self.q_table = np.zeros(tuple(num_bins) + (self.env.action_space.n,))
-        
-        # self.q_table = np.zeros((num_bins + env.action_space.n))    ####### TODO fix observation space part of the q-table
+        if input_model_path:
+            self.load_model(input_model_path)
+        else:
+            # initialize q-table with zeros 
+            self.q_table = np.zeros(tuple(num_bins) + (self.env.action_space.n,))
 
 
     # Discretize a continuous observation to obtain a discrete state
@@ -69,18 +68,43 @@ class QLearningAgent:
         self.q_table[state + (action,)] = new_q_value
 
 
-    def save_q_table_as_csv(self, episode_number=None):   ### TODO: cannot save ndarray q-table as csv. Possibly use pickle or other format. ###
+    def load_model(self, model_path):
+        # with h5py.File(model_path, 'r') as hf:
+        #     data = hf['q-table'][:]
+        #     self.q_table = data
+        self.q_table = np.load(model_path)
+
+    def save_model(self, episode_number=None, threshold_params=None, score_avg=None):
         current_time = datetime.datetime.now()
-        file_name = self.file_save_path + "q_table_" + str(episode_number) + "_" + current_time.strftime("%Y%m%d_%H%M%S") + ".csv"
-        np.savetxt(file_name, self.q_table, delimiter=",")
+        file_name = self.file_save_path + "q_table_" + str(episode_number) + "_" + current_time.strftime("%Y%m%d_%H%M%S")
+
+        # with h5py.File(file_name + ".h5", 'w') as hf:
+        #     hf.create_dataset('q-table', data=self.q_table)
+        np.save(file_name + ".npy", self.q_table)
+
+        # write an accompanying txt file with the training parameters and info relating to the newly saved model.
+        file = open(file_name + ".txt", "w")
+        file.write("agent_type=" + self.__class__.__name__ + "\n")
+        file.write("env_type=" + self.env.spec.id + "\n")
+        file.write(f"{self.learning_rate=}" + "\n")
+        file.write(f"{self.learning_decay_rate=}" + "\n")
+        file.write(f"{self.min_learning_rate=}" + "\n")
+        file.write(f"{self.discount_factor=}" + "\n")
+        file.write(f"{self.exploration_rate=}" + "\n")
+        file.write(f"{self.exploration_decay_rate=}" + "\n")
+        file.write(f"{self.min_exploration_rate=}" + "\n")
+        file.write(f"{self.num_bins=}" + "\n")
+        file.write("threshold_params [episodes_avg, avg_needed]=" + str(threshold_params) + "\n")
+        file.write(f"{score_avg=}" + "\n")
+        file.close()
 
 
-    def load_q_table(self, file_name): #### TODO ###
-        pass
+
 
 
     def train(self, num_episodes, threshold_params=None, show_graphs=False): # threshold_params is [episodes, score_avrg]
         rewards = []
+        score_avg = 0
 
         # train for each episide
         for i, episode in enumerate(pbar:= tqdm(range(num_episodes))):
@@ -100,6 +124,7 @@ class QLearningAgent:
                 done = terminated or truncated
                 state = next_state
 
+            rewards.append(episode_reward)
             # update exploration rate
             self.exploration_rate = round(self.exploration_rate * (1 - self.exploration_decay_rate), 6)
             self.exploration_rate = max(self.exploration_rate, self.min_exploration_rate)
@@ -109,9 +134,7 @@ class QLearningAgent:
             self.learning_rate = max(self.learning_rate, self.min_learning_rate)
 
 
-            rewards.append(episode_reward)
             if len(rewards) > threshold_params[0]:
-                {np.mean(rewards[-threshold_params[0]:])}
                 score_avg = np.mean(rewards[-threshold_params[0]:]).round(2)
                 pbar.set_postfix_str(f"Average Reward: {int(score_avg)}, Exploration: {self.exploration_rate}, Learning: {self.learning_rate}")
 
@@ -123,6 +146,8 @@ class QLearningAgent:
             else:
                 pbar.set_postfix_str(f"Avg Reward: n/a, Exploration: {round(self.exploration_rate, 2)}, Learning: {round(self.learning_rate, 2)}")
 
+
+        self.save_model(i+1, threshold_params, score_avg)
 
         if show_graphs:
             rolling_length = 500
@@ -147,7 +172,6 @@ class QLearningAgent:
             plt.show()
         
 
-        # self.save_q_table_as_csv()
 
 
     def test(self, num_episodes, render=False):
