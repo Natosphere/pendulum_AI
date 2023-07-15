@@ -9,6 +9,6 @@ dependencies:
     - opencv-python
     - pygame
     - numpy
-    - tqdp
+    - tqdm
     - pandas
     - h5py
