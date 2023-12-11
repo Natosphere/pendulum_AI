@@ -1,0 +1,12 @@
+agent_type=QLearningAgent
+env_type=CartPole-v1
+self.learning_rate=0.257519
+self.learning_decay_rate=0.0001
+self.min_learning_rate=0.02
+self.discount_factor=0.99
+self.exploration_rate=0.367875
+self.exploration_decay_rate=0.0001
+self.min_exploration_rate=0.02
+self.num_bins=[30, 30, 40, 20]
+threshold_params [episodes_avg, avg_needed]=[100, 250]
+score_avg=29.92

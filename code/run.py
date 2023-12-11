@@ -3,7 +3,7 @@ from agents.Q_Agent import QLearningAgent
 from gymnasium.vector import AsyncVectorEnv
 from agents.Q_Agent_Vector import QLearningAgentVector
 
-n_episodes = 80000
+n_episodes = 60000
 
 
 
@@ -15,7 +15,7 @@ discount_factor=0.99            # gamma. 0 means agent only cares about immediat
 exploration_rate=1.0            # initial epsilon value
 exploration_decay_rate=0.0001   # epsilon decay rate
 min_exploration_rate=0.02
-file_save_path="./models/"
+file_save_path="./code/models/"
 num_bins=[30,30,40,20]              # Adjust the number of bins based on your environment. length depends on observation space variables, 
                                     # the number size correlates to how granular you want the analog measurements to be digitized into.
 
@@ -36,21 +36,21 @@ agent = QLearningAgent(
     min_exploration_rate,
     file_save_path,
     num_bins,
-    input_model_path="./models/q_table_80000_20230713_174836.npy"
+    # input_model_path="./code/models/q_table_39325_20231208_164116.pickle"
     )
 
 # load pre-trained model
 # agent.load_model("./models/q_table_27873_20230713_172532.h5.npy")
 
 # Train the agent
-# agent.train(num_episodes=n_episodes, threshold_params=[100, 450], show_graphs=True)
+# agent.train(num_episodes=n_episodes, threshold_params=[100, 400], show_graphs=True)
 
 
 # load pre-trained model
-# agent.load_model("./models/q_table_80000_20230713_174836.npy")
+agent.load_model("./code/models/q_table_39325_20231208_164116.pickle")
 
 
 # Test the agent
-rewards = agent.test(num_episodes=5, render=True)
+rewards = agent.test(num_episodes=10, render=True)
 average_reward = sum(rewards) / len(rewards)
 print("Average reward:", average_reward)

@@ -6,6 +6,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import cv2
 import h5py
+import pickle
 
 class QLearningAgent:
 
@@ -72,15 +73,31 @@ class QLearningAgent:
         # with h5py.File(model_path, 'r') as hf:
         #     data = hf['q-table'][:]
         #     self.q_table = data
-        self.q_table = np.load(model_path)
+        with open(model_path, "rb") as handle:
+            b = pickle.load(handle)
+        self.q_table = b
+
+        self.exploration_rate = 0
+        print("loaded")
 
     def save_model(self, episode_number=None, threshold_params=None, score_avg=None):
         current_time = datetime.datetime.now()
         file_name = self.file_save_path + "q_table_" + str(episode_number) + "_" + current_time.strftime("%Y%m%d_%H%M%S")
 
-        # with h5py.File(file_name + ".h5", 'w') as hf:
-        #     hf.create_dataset('q-table', data=self.q_table)
-        np.save(file_name + ".npy", self.q_table)
+        with open(file_name + ".pickle", "wb") as handle:
+            pickle.dump(self.q_table, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        # np.save(file_name + ".npy", self.q_table)
+        print("saved")
+
+        # test save and load
+        with open(file_name + ".pickle", 'rb') as handle:
+            b = pickle.load(handle)
+        # "successful match" if np.array_equal(self.q_table, b) else "no match"
+        # (self.q_table == b).all()
+        if np.array_equal(self.q_table, b):
+            print("succesful match")
+        else:
+            print("no match")
 
         # write an accompanying txt file with the training parameters and info relating to the newly saved model.
         file = open(file_name + ".txt", "w")
