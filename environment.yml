@@ -12,3 +12,4 @@ dependencies:
     - tqdm
     - pandas
     - h5py
+    - tensorflow<2.11
